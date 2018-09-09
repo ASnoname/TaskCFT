@@ -6,16 +6,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.pow;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
+import static java.nio.file.StandardOpenOption.APPEND;
 
 public class OutputFile {
 
-    private long SIZE_BUFF_FOR_WRITE = MergeFiles.MAX_SIZE_BUFF_FILE * 2;
+    private int SIZE_BUFF_FOR_WRITE = (int) (MergeFiles.MAX_SIZE_BUFF_FILE * 2);
 
     private Path outPath;
     private Path directory;
@@ -69,74 +69,127 @@ public class OutputFile {
 
     private void merge(MergeFiles mergeFiles) throws IOException {
 
-//        long sumSizes = Files.size(mergeFiles.getFirstInFile()) + Files.size(mergeFiles.getSecondInFile());
-//        long countIteration = (sumSizes / (MergeFiles.MAX_SIZE_BUFF_FILE * 2)) + 1;
-//
-//        for (long i = 0; i < countIteration; i++){
-//            Files.write(mergeFiles.getOutFile(), fillOutList(mergeFiles));
-//        }
+        //привести в порядок эти два метода и еще раз проверить все!
+
+        int sizeOutList = getMaxBuffSize(mergeFiles) * 2;
+        List<String> outList = new ArrayList<>(sizeOutList);
+
+        int leftIterByBuffs = 0;
+        int rightIterByBuffs = 0;
+
+        List<String> leftList = getLines(mergeFiles.getSmallFile(), leftIterByBuffs, mergeFiles);
+        List<String> rightList = getLines(mergeFiles.getBigFile(), rightIterByBuffs, mergeFiles);
+
+        int leftLimit = leftList.size();
+        int rightLimit = rightList.size();
+
+        int left = 0;
+        int right = 0;
+
+        while (true){
+
+            for (int j = 0; j < sizeOutList; j++) {
+
+                if (right < rightLimit) {
+
+                    if (left < leftLimit) {
+                        if ((mergeFiles.getComparator().compare(leftList.get(left), rightList.get(right)) >= 0) ^ mergeFiles.isUp()) {
+                            outList.add(j, leftList.get(left));
+                            left++;
+                        } else {
+                            outList.add(j, rightList.get(right));
+                            right++;
+                        }
+                    } else {
+                        j--;
+                        if (leftIterByBuffs + 1 < mergeFiles.getMinCountBuff()){
+                            leftIterByBuffs++;
+                            left = 0;
+                            leftList = getLines(mergeFiles.getSmallFile(), leftIterByBuffs, mergeFiles);
+                            leftLimit = leftList.size();
+                        }
+                        else {
+                            Files.write(mergeFiles.getOutFile(), outList, APPEND);
+                            finishMerge(mergeFiles.getBigFile(), mergeFiles.getOutFile(), right, rightIterByBuffs, mergeFiles);
+                            return;
+                        }
+                    }
+                } else {
+                    j--;
+                    if (rightIterByBuffs + 1 < mergeFiles.getBuffSize().size()){
+                        rightIterByBuffs++;
+                        right = 0;
+                        rightList = getLines(mergeFiles.getBigFile(), rightIterByBuffs, mergeFiles);
+                        rightLimit = rightList.size();
+                    }
+                    else {
+                        Files.write(mergeFiles.getOutFile(), outList, APPEND);
+                        finishMerge(mergeFiles.getSmallFile(), mergeFiles.getOutFile(), left, leftIterByBuffs, mergeFiles);
+                        return;
+                    }
+                }
+            }
+
+            Files.write(mergeFiles.getOutFile(), outList, APPEND);
+            outList.clear();
+        }
     }
 
-//    private List<String> fillOutList(MergeFiles mergeFiles) throws IOException {
-//
-//        List<String> outList = new ArrayList<>((int)(MergeFiles.MAX_SIZE_BUFF_FILE * 2));
-//
-//        long leftLimit = mergeFiles.getBuffSize().get(0);
-//        long rightLimit = mergeFiles.getBuffSize().get(0);
-//        long lastIndexLeft = Files.lines(mergeFiles.getFirstInFile()).count() - 1;
-//        long lastIndexRight = Files.lines(mergeFiles.getSecondInFile()).count() - 1;
-//
-//        while (outList.size() < SIZE_BUFF_FOR_WRITE && (leftLimit < lastIndexLeft || rightLimit < lastIndexRight)){
-//
-//
-//        }
-//
-//        List<String> leftList = getLines(mergeFiles.getFirstInFile(), i, mergeFiles);
-//        List<String> rightList = getLines(mergeFiles.getSecondInFile(), i, mergeFiles);
-//
-//        int left = 0;
-//        int right = 0;
-//
-//        long limit = mergeFiles.getBuffSize().get(i);
-//
-//        for (int j = 0; j < 2 * limit; j++) {
-//
-//            if (right < limit) {
-//
-//                if (left < limit) {
-//                    if ((mergeFiles.getComparator().compare(leftList.get(left), rightList.get(right)) >= 0) ^ mergeFiles.isUp()) {
-//                        outList.add(j, leftList.get(left));
-//                        left++;
-//                    } else {
-//                        outList.add(j, rightList.get(right));
-//                        right++;
-//                    }
-//                } else {
-//                    outList.add(j, rightList.get(right));
-//                    right++;
-//                }
-//            } else {
-//                outList.add(j, leftList.get(left));
-//                left++;
-//            }
-//        }
-//        return outList;
-//    }
+    private void finishMerge(Path inFile, Path outFile, int line, int numberBuff, MergeFiles mergeFiles) throws IOException {
 
-    private List<String> getLines(Path path, int number, MergeFiles mergeFiles) throws IOException {
+        long currentLine = 0;
+        for (int i = 0; i < numberBuff; i++){
+            currentLine += mergeFiles.getBuffSize().get(i);
+        }
+        currentLine += line;
 
-        if (number >= mergeFiles.getBuffSize().size()){
+        long maxLine = mergeFiles.getBuffSize().get(numberBuff);
+
+        Files.write(outFile, Files
+                                    .lines(inFile)
+                                    .skip(currentLine)
+                                    .limit(maxLine - line)
+                                    .collect(Collectors.toList()), APPEND);
+
+        int max = mergeFiles.getMinCountBuff();
+
+        if (inFile.equals(mergeFiles.getBigFile())){
+            max = mergeFiles.getBuffSize().size();
+        }
+
+        numberBuff++;
+        for (int i = numberBuff; i < max; i++){
+
+            Files.write(outFile, getLines(inFile, i, mergeFiles), APPEND);
+        }
+    }
+
+    private int getMaxBuffSize(MergeFiles mergeFiles) {
+
+        long max = 0;
+        for (int i = 0; i < mergeFiles.getBuffSize().size(); i++){
+            if (mergeFiles.getBuffSize().get(i) > max){
+                max = mergeFiles.getBuffSize().get(i);
+            }
+        }
+
+        return (int) max;
+    }
+
+    private List<String> getLines(Path path, int numberBuff, MergeFiles mergeFiles) throws IOException {
+
+        if (numberBuff >= mergeFiles.getBuffSize().size()){
             throw new IllegalAccessError("Inner error");
         }
 
         long lines = 0;
-        for (int i = 0; i < number; i++){
+        for (int i = 0; i < numberBuff; i++){
             lines += mergeFiles.getBuffSize().get(i);
         }
         return Files
                 .lines(path)
                 .skip(lines)
-                .limit(mergeFiles.getBuffSize().get(number))
+                .limit(mergeFiles.getBuffSize().get(numberBuff))
                 .collect(Collectors.toList());
     }
 

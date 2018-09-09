@@ -109,6 +109,10 @@ public class MergeFiles {
         }
     }
 
+    public Path getSmallFile(){
+        return getSmallFile(firstInFile, secondInFile);
+    }
+
     private Path getSmallFile(Path firstInFile, Path secondInFile) {
 
         if (firstMoreSecond){
