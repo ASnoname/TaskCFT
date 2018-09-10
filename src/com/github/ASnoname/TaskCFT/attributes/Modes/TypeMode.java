@@ -14,7 +14,7 @@ public enum TypeMode implements CmdAttribute, FilterAttribute {
         }
 
         @Override
-        public Stream<String> getStream(Stream<String> stream){
+        public Stream<String> doFilter(Stream<String> stream){
             return stream;
         }
 
@@ -26,7 +26,7 @@ public enum TypeMode implements CmdAttribute, FilterAttribute {
         }
 
         @Override
-        public Stream<String> getStream(Stream<String> stream) {
+        public Stream<String> doFilter(Stream<String> stream) {
             return stream.filter(this::isIntegerLine);
         }
 

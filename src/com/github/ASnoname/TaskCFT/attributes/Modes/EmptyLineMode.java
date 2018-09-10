@@ -9,14 +9,14 @@ public enum EmptyLineMode implements FilterAttribute, InnerAttribute {
 
     WITH_EMPTY_LINE{
         @Override
-        public Stream<String> getStream(Stream<String> stream) {
+        public Stream<String> doFilter(Stream<String> stream) {
             return stream;
         }
     },
 
     WITHOUT_EMPTY_LINE{
         @Override
-        public Stream<String> getStream(Stream<String> stream) {
+        public Stream<String> doFilter(Stream<String> stream) {
             return stream.filter(l -> l.length() > 0);
         }
     };

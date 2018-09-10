@@ -4,5 +4,5 @@ import java.util.stream.Stream;
 
 public interface FilterAttribute {
 
-    Stream<String> getStream(Stream<String> stream);
+    Stream<String> doFilter(Stream<String> stream);
 }

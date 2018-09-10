@@ -9,14 +9,14 @@ public enum SpaceMode implements FilterAttribute, InnerAttribute {
 
     WITH_SPACE{
         @Override
-        public Stream<String> getStream(Stream<String> stream) {
+        public Stream<String> doFilter(Stream<String> stream) {
             return stream;
         }
     },
 
     WITHOUT_SPACE{
         @Override
-        public Stream<String> getStream(Stream<String> stream) {
+        public Stream<String> doFilter(Stream<String> stream) {
             return stream.filter(this::isWithoutSpaceLine);
         }
 

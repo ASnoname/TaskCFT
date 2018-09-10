@@ -15,7 +15,7 @@ import static java.nio.file.StandardOpenOption.APPEND;
 
 public class OutputFile {
 
-    private int SIZE_BUFF_FOR_WRITE = (int) (MergeFiles.MAX_SIZE_BUFF_FILE * 2);
+    private int SIZE_BUFF_FOR_WRITE = Long.valueOf(MergeFiles.MAX_SIZE_BUFF_FILE * 2).intValue();
 
     private Path outPath;
     private Path directory;
@@ -68,8 +68,6 @@ public class OutputFile {
     }
 
     private void merge(MergeFiles mergeFiles) throws IOException {
-
-        //привести в порядок эти два метода и еще раз проверить все!
 
         int sizeOutList = getMaxBuffSize(mergeFiles) * 2;
         List<String> outList = new ArrayList<>(sizeOutList);
@@ -166,14 +164,14 @@ public class OutputFile {
 
     private int getMaxBuffSize(MergeFiles mergeFiles) {
 
-        long max = 0;
+        Long max = 0L;
         for (int i = 0; i < mergeFiles.getBuffSize().size(); i++){
             if (mergeFiles.getBuffSize().get(i) > max){
                 max = mergeFiles.getBuffSize().get(i);
             }
         }
 
-        return (int) max;
+        return max.intValue();
     }
 
     private List<String> getLines(Path path, int numberBuff, MergeFiles mergeFiles) throws IOException {

@@ -17,12 +17,13 @@ import java.util.stream.Stream;
 public class Configure {
 
     public static final String INPUT_DIRECTORY = "input/";
-    public static final String OUTPUT_DIRECTORY = "output/";
+    private static final String OUTPUT_DIRECTORY = "output/";
+    private static final int COUNT_CODES = 4;
 
     private static Map<String, String> codeToName;
 
     static {
-        codeToName = new HashMap<>(4);
+        codeToName = new HashMap<>(COUNT_CODES);
         codeToName.put( SortMode.ASCENDING.getCode(), SortMode.name);
         codeToName.put(SortMode.DECREASES.getCode(), SortMode.name);
         codeToName.put( TypeMode.STRING_TYPE.getCode(), TypeMode.name);
@@ -32,7 +33,7 @@ public class Configure {
     private static Map<String, String> codeToValueEnum;
 
     static {
-        codeToValueEnum = new HashMap<>(4);
+        codeToValueEnum = new HashMap<>(COUNT_CODES);
         codeToValueEnum.put(SortMode.ASCENDING.getCode(), SortMode.ASCENDING.name());
         codeToValueEnum.put(SortMode.DECREASES.getCode(), SortMode.DECREASES.name());
         codeToValueEnum.put(TypeMode.STRING_TYPE.getCode(), TypeMode.STRING_TYPE.name());
@@ -64,17 +65,17 @@ public class Configure {
 
     public Stream<String> filterLines(Stream<String> stream){
 
-        return filterByEmptyLineMode(filterBySpaceMode(filterByTypeData(stream)));
+        return filterByEmptyLineMode(filterBySpaceMode(filterByTypeMode(stream)));
     }
 
     private Stream<String> filterByEmptyLineMode(Stream<String> stream) {
 
         if(attributes.get( EmptyLineMode.name).getValue().equals(EmptyLineMode.WITHOUT_EMPTY_LINE.name())){
 
-            return EmptyLineMode.WITHOUT_EMPTY_LINE.getStream(stream);
+            return EmptyLineMode.WITHOUT_EMPTY_LINE.doFilter(stream);
         }
         else {
-            return EmptyLineMode.WITH_EMPTY_LINE.getStream(stream);
+            return EmptyLineMode.WITH_EMPTY_LINE.doFilter(stream);
         }
     }
 
@@ -82,21 +83,21 @@ public class Configure {
 
         if(attributes.get( SpaceMode.name).getValue().equals(SpaceMode.WITHOUT_SPACE.name())){
 
-            return SpaceMode.WITHOUT_SPACE.getStream(stream);
+            return SpaceMode.WITHOUT_SPACE.doFilter(stream);
         }
         else {
-            return SpaceMode.WITH_SPACE.getStream(stream);
+            return SpaceMode.WITH_SPACE.doFilter(stream);
         }
     }
 
-    private Stream<String> filterByTypeData(Stream<String> stream) {
+    private Stream<String> filterByTypeMode(Stream<String> stream) {
 
         if(attributes.get(TypeMode.name).getValue().equals(TypeMode.INTEGER_TYPE.name())){
 
-            return TypeMode.INTEGER_TYPE.getStream(stream);
+            return TypeMode.INTEGER_TYPE.doFilter(stream);
         }
         else {
-            return TypeMode.STRING_TYPE.getStream(stream);
+            return TypeMode.STRING_TYPE.doFilter(stream);
         }
     }
 

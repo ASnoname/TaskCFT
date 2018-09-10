@@ -17,5 +17,5 @@ public enum SortMode implements CmdAttribute {
         }
     };
 
-    public static final String name = "modeSort";
+    public static final String name = "sortMode";
 }

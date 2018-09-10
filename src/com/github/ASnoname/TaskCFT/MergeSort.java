@@ -40,7 +40,6 @@ public final class MergeSort {
                                 .sortFile(configure);
                     } catch (IOException e) {
                         System.out.println("I/O error");
-                        return;
                     }
                 });
 

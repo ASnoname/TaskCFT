@@ -3,6 +3,7 @@ package com.github.ASnoname.TaskCFT.configure.comparators;
 import java.util.Comparator;
 
 public class StringComparator implements Comparator<String> {
+
     public StringComparator() {
     }
 

@@ -101,12 +101,8 @@ public class MergeFiles {
     }
 
     private Path getBigFile(Path firstInFile, Path secondInFile) {
-        if (firstMoreSecond){
-            return firstInFile;
-        }
-        else {
-            return secondInFile;
-        }
+
+        return firstMoreSecond ? firstInFile : secondInFile;
     }
 
     public Path getSmallFile(){
@@ -115,12 +111,7 @@ public class MergeFiles {
 
     private Path getSmallFile(Path firstInFile, Path secondInFile) {
 
-        if (firstMoreSecond){
-            return secondInFile;
-        }
-        else {
-            return firstInFile;
-        }
+        return firstMoreSecond ? secondInFile : firstInFile;
     }
 
     private boolean initFirstMoreSecond(Path firstInFile, Path secondInFile) throws IOException {
