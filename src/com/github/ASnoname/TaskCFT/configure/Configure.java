@@ -152,6 +152,10 @@ public class Configure {
         if (inFiles.size() < 1){
             throw new IllegalArgumentException("Not found input files");
         }
+
+        if (inFiles.size() != Files.walk(Paths.get(INPUT_DIRECTORY), 1).count()){
+            throw new IllegalArgumentException("Not correct directory input");
+        }
     }
 
     private void fillAttributes(String[] args){
